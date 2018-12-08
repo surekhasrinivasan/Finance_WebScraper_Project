@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Finance_WebScraper.Data;
 using Finance_WebScraper.Models;
+using Microsoft.AspNetCore.Authorization;
+using Finance_WebScraper.Services;
 
 namespace Finance_WebScraper.Controllers
 {
@@ -20,12 +22,21 @@ namespace Finance_WebScraper.Controllers
         }
 
         // GET: Stocks
+        [Authorize]
         public async Task<IActionResult> Index()
         {
             return View(await _context.Stock.ToListAsync());
         }
 
+        // GET: Stocks/History
+        [Authorize]
+        public async Task<IActionResult> History()
+        {
+            return View(await _context.Stock.ToListAsync());
+        }
+
         // GET: Stocks/Details/5
+        [Authorize]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -44,6 +55,7 @@ namespace Finance_WebScraper.Controllers
         }
 
         // GET: Stocks/Create
+        [Authorize]
         public IActionResult Create()
         {
             return View();
@@ -52,20 +64,37 @@ namespace Finance_WebScraper.Controllers
         // POST: Stocks/Create
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("ID,Symbol,LastPrice,Change,PercentChange,Currency,MarketCap,MarketTime")] Stock stock)
         {
+            //if (ModelState.IsValid)
+            //{
+            //    _context.Add(stock);
+            //    await _context.SaveChangesAsync();
+            //    return RedirectToAction(nameof(Index));
+            //}
+            //return View(stock);
+
             if (ModelState.IsValid)
             {
-                _context.Add(stock);
-                await _context.SaveChangesAsync();
+                Scraper newScraper = new Scraper();
+
+                var stockItems = newScraper.Scrape();
+                foreach (var stockItem in stockItems)
+                {
+                    stockItem.MarketTime = DateTime.Now;
+                    _context.Add(stockItem);
+                    await _context.SaveChangesAsync();
+                }
                 return RedirectToAction(nameof(Index));
             }
-            return View(stock);
+            return View();
         }
 
         // GET: Stocks/Edit/5
+        [Authorize]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -84,6 +113,7 @@ namespace Finance_WebScraper.Controllers
         // POST: Stocks/Edit/5
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("ID,Symbol,LastPrice,Change,PercentChange,Currency,MarketCap,MarketTime")] Stock stock)
@@ -117,6 +147,7 @@ namespace Finance_WebScraper.Controllers
         }
 
         // GET: Stocks/Delete/5
+        [Authorize]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -135,6 +166,7 @@ namespace Finance_WebScraper.Controllers
         }
 
         // POST: Stocks/Delete/5
+        [Authorize]
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
