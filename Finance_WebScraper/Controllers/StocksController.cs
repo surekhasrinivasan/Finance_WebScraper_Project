@@ -81,7 +81,7 @@ namespace Finance_WebScraper.Controllers
             {
                 Scraper newScraper = new Scraper();
 
-                var stockItems = newScraper.Scrape();
+                List<Stock> stockItems = newScraper.Scrape();
                 foreach (var stockItem in stockItems)
                 {
                     stockItem.MarketTime = DateTime.Now;
